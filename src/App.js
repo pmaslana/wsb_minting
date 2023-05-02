@@ -408,19 +408,6 @@ function App() {
                       >
                         {claimingNft ? "BUSY" : "Public Mint"}
                       </StyledButton>
-
-                      <StyledButton
-                        disabled={claimingNft ? 1 : 0}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          wlMint();
-                          getData();
-                        }}
-                      >
-                        {claimingNft ? "BUSY" : "WL Mint"}
-                      </StyledButton>
-
-
                     </s.Container>
                   </>
                 )}
