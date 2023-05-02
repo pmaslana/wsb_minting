@@ -5,6 +5,7 @@ import { fetchData } from "./redux/data/dataActions";
 import * as s from "./styles/globalStyles";
 import styled from "styled-components";
 
+
 const truncate = (input, len) =>
   input.length > len ? `${input.substring(0, len)}...` : input;
 
@@ -76,7 +77,7 @@ export const StyledLogo = styled.img`
 
 export const StyledImg = styled.img`
   box-shadow: 0px 5px 11px 2px rgba(0, 0, 0, 0.7);
-  border: 4px dashed var(--secondary);
+  border: 4px solid var(--secondary);
   background-color: var(--accent);
   border-radius: 100%;
   width: 200px;
@@ -93,6 +94,7 @@ export const StyledLink = styled.a`
   color: var(--secondary);
   text-decoration: none;
 `;
+
 
 function App() {
   const dispatch = useDispatch();
@@ -130,7 +132,39 @@ function App() {
     setFeedback(`Minting your ${CONFIG.NFT_NAME}...`);
     setClaimingNft(true);
     blockchain.smartContract.methods
-      .mint(blockchain.account, mintAmount)
+      .mint(mintAmount)
+      .send({
+        gasLimit: String(totalGasLimit),
+        to: CONFIG.CONTRACT_ADDRESS,
+        from: blockchain.account,
+        value: totalCostWei,
+      })
+      .once("error", (err) => {
+        console.log(err);
+        setFeedback("Sorry, something went wrong please try again later.");
+        setClaimingNft(false);
+      })
+      .then((receipt) => {
+        console.log(receipt);
+        setFeedback(
+          `WOW, the ${CONFIG.NFT_NAME} is yours! go visit Opensea.io to view it.`
+        );
+        setClaimingNft(false);
+        dispatch(fetchData(blockchain.account));
+      });
+  };
+
+  const wlMint = () => {
+    let cost = CONFIG.WEI_COST;
+    let gasLimit = CONFIG.GAS_LIMIT;
+    let totalCostWei = String(cost * mintAmount);
+    let totalGasLimit = String(gasLimit * mintAmount);
+    console.log("Cost: ", totalCostWei);
+    console.log("Gas limit: ", totalGasLimit);
+    setFeedback(`Minting your ${CONFIG.NFT_NAME}...`);
+    setClaimingNft(true);
+    blockchain.smartContract.methods
+      .mint(mintAmount)
       .send({
         gasLimit: String(totalGasLimit),
         to: CONFIG.CONTRACT_ADDRESS,
@@ -162,8 +196,8 @@ function App() {
 
   const incrementMintAmount = () => {
     let newMintAmount = mintAmount + 1;
-    if (newMintAmount > 50) {
-      newMintAmount = 50;
+    if (newMintAmount > 3) {
+      newMintAmount = 3;
     }
     setMintAmount(newMintAmount);
   };
@@ -199,11 +233,9 @@ function App() {
         flex={1}
         ai={"center"}
         style={{ padding: 24, backgroundColor: "var(--primary)" }}
-        image={CONFIG.SHOW_BACKGROUND ? "/config/images/bg.png" : null}
+        image={CONFIG.SHOW_BACKGROUND ? "/config/images/bg.gif" : null}
       >
-        <a href={CONFIG.MARKETPLACE_LINK}>
-          <StyledLogo alt={"logo"} src={"/config/images/logo.png"} />
-        </a>
+        <StyledLogo alt={"logo"} src={"/config/images/logo.png"} />
         <s.SpacerSmall />
         <ResponsiveWrapper flex={1} style={{ padding: 24 }} test>
           <s.Container flex={1} jc={"center"} ai={"center"}>
@@ -218,7 +250,7 @@ function App() {
               backgroundColor: "var(--accent)",
               padding: 24,
               borderRadius: 24,
-              border: "4px dashed var(--secondary)",
+              border: "4px solid var(--secondary)",
               boxShadow: "0px 5px 11px 2px rgba(0,0,0,0.7)",
             }}
           >
@@ -229,7 +261,17 @@ function App() {
                 fontWeight: "bold",
                 color: "var(--accent-text)",
               }}
+            >10k Collection Phase 1 of 3
+              <s.TextTitle
+              style={{
+                textAlign: "center",
+                fontSize: 50,
+                fontWeight: "bold",
+                color: "var(--accent-text)",
+              }}
             >
+
+            </s.TextTitle>
               {data.totalSupply} / {CONFIG.MAX_SUPPLY}
             </s.TextTitle>
             <s.TextDescription
@@ -242,32 +284,6 @@ function App() {
                 {truncate(CONFIG.CONTRACT_ADDRESS, 15)}
               </StyledLink>
             </s.TextDescription>
-            <span
-              style={{
-                textAlign: "center",
-              }}
-            >
-              <StyledButton
-                onClick={(e) => {
-                  window.open("/config/roadmap.pdf", "_blank");
-                }}
-                style={{
-                  margin: "5px",
-                }}
-              >
-                Roadmap
-              </StyledButton>
-              <StyledButton
-                style={{
-                  margin: "5px",
-                }}
-                onClick={(e) => {
-                  window.open(CONFIG.MARKETPLACE_LINK, "_blank");
-                }}
-              >
-                {CONFIG.MARKETPLACE}
-              </StyledButton>
-            </span>
             <s.SpacerSmall />
             {Number(data.totalSupply) >= CONFIG.MAX_SUPPLY ? (
               <>
@@ -313,13 +329,15 @@ function App() {
                       Connect to the {CONFIG.NETWORK.NAME} network
                     </s.TextDescription>
                     <s.SpacerSmall />
+
+
                     <StyledButton
                       onClick={(e) => {
                         e.preventDefault();
                         dispatch(connect());
                         getData();
                       }}
-                    >
+                    >   
                       CONNECT
                     </StyledButton>
                     {blockchain.errorMsg !== "" ? (
@@ -388,8 +406,21 @@ function App() {
                           getData();
                         }}
                       >
-                        {claimingNft ? "BUSY" : "BUY"}
+                        {claimingNft ? "BUSY" : "Public Mint"}
                       </StyledButton>
+
+                      <StyledButton
+                        disabled={claimingNft ? 1 : 0}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          wlMint();
+                          getData();
+                        }}
+                      >
+                        {claimingNft ? "BUSY" : "WL Mint"}
+                      </StyledButton>
+
+
                     </s.Container>
                   </>
                 )}
