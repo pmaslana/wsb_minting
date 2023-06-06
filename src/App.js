@@ -187,7 +187,7 @@ function App() {
   };
 
   const decrementMintAmount = () => {
-    let newMintAmount = mintAmount - 1;
+    let newMintAmount = mintAmount;
     if (newMintAmount < 1) {
       newMintAmount = 1;
     }
@@ -196,8 +196,8 @@ function App() {
 
   const incrementMintAmount = () => {
     let newMintAmount = mintAmount + 1;
-    if (newMintAmount > 3) {
-      newMintAmount = 3;
+    if (newMintAmount > 1) {
+      newMintAmount = 1;
     }
     setMintAmount(newMintAmount);
   };
